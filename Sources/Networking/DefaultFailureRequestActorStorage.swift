@@ -10,6 +10,9 @@ import NetworkProtocols
 
 
 actor DefaultFailureRequestActorStorage: FailureRequestStorageProtocol {
+    
+    public init() {}
+    
     private var pendingRequests: [@Sendable () async throws -> Void] = []
 
     func pending() async -> [@Sendable () async throws -> Void] {

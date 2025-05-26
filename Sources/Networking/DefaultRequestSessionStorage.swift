@@ -10,7 +10,10 @@ import NetworkProtocols
 
 
 public actor DefaultRequestSessionStorage: RequestSessionStorageProtocol {
+    
     private var tasks: [String: URLSessionDataTask] = [:]
+    
+    public init() {}
 
     public func add(task: URLSessionDataTask, for id: String) async {
         tasks[id] = task
