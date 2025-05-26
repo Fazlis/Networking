@@ -9,7 +9,7 @@ import Foundation
 import NetworkProtocols
 
 
-actor DefaultFailureRequestActorStorage: FailureRequestStorageProtocol {
+public actor DefaultFailureRequestActorStorage: FailureRequestStorageProtocol {
     
     public init() {}
     
