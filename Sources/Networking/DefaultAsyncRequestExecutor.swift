@@ -20,16 +20,6 @@ public final class DefaultAsyncRequestExecutor: AsyncRequestExecuteProtocol {
     public func execute<E: Endpoint>(_ endpoint: E) async throws -> E.Response {
         var request = endpoint.request
 
-        request.httpMethod = endpoint.method.rawValue
-        request.allHTTPHeaderFields = endpoint.headers
-        request.httpBody = endpoint.body
-
-        if !endpoint.queryItems.isEmpty,
-           var components = URLComponents(string: endpoint.baseURL + endpoint.path) {
-            components.queryItems = endpoint.queryItems
-            request.url = components.url
-        }
-
         let start = Date()
         logger.logRequest(request)
 

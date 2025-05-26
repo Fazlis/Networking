@@ -9,45 +9,54 @@ import Foundation
 import NetworkProtocols
 
 
+import Foundation
+
 public actor DefaultRequestSessionStorage: RequestSessionStorageProtocol {
     
     private var tasks: [String: URLSessionDataTask] = [:]
     
     public init() {}
 
+    /// Добавление задачи с учётом предыдущих
     public func add(task: URLSessionDataTask, for id: String) async {
         if let existingTask = tasks[id] {
-            print("🔁 [SessionStorage] Task already exists for id: \(id). Cancelling and replacing.")
+            print("♻️ Заменяем существующий task с id: \(id). Отмена старого.")
             existingTask.cancel()
         } else {
-            print("➕ [SessionStorage] Adding new task for id: \(id)")
+            print("🆕 Добавляем новый task с id: \(id)")
         }
 
         tasks[id] = task
     }
 
+    /// Отмена задачи по id
     public func cancelTask(with id: String) async {
-        if let task = tasks[id] {
-            print("❌ [SessionStorage] Cancelling task for id: \(id)")
-            task.cancel()
-            tasks[id] = nil
-        } else {
-            print("⚠️ [SessionStorage] No task found to cancel for id: \(id)")
+        guard let task = tasks[id] else {
+            print("⚠️ Нет задачи с id: \(id) для отмены")
+            return
         }
+
+        print("❌ Отменён task с id: \(id)")
+        task.cancel()
+        tasks[id] = nil
     }
 
+    /// Удаление задачи после завершения или отмены
     public func removeTask(for id: String) async {
         if tasks.removeValue(forKey: id) != nil {
-            print("🗑️ [SessionStorage] Removed task for id: \(id)")
+            print("🧹 Удалён task с id: \(id) после выполнения")
         } else {
-            print("⚠️ [SessionStorage] No task found to remove for id: \(id)")
+            print("⚠️ Попытка удалить несуществующий task с id: \(id)")
         }
     }
 
+    /// Отмена всех задач
     public func cancelAllTasks() async {
-        print("🚨 [SessionStorage] Cancelling all tasks (\(tasks.count) total)")
-        tasks.values.forEach { $0.cancel() }
+        tasks.forEach { key, task in
+            print("❌ Отменён task с id: \(key)")
+            task.cancel()
+        }
         tasks.removeAll()
-        print("✅ [SessionStorage] All tasks cancelled and cleared")
+        print("🧼 Все задачи отменены и очищены")
     }
 }
