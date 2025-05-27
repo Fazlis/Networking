@@ -24,11 +24,21 @@ public final class DefaultAsyncRequestExecutor: AsyncRequestExecuteProtocol {
         logger.logRequest(request)
 
         let (data, response): (Data, URLResponse)
+        
         do {
             (data, response) = try await session.data(for: request)
         } catch {
-            logger.logResponse(nil, request, data: nil, error: error, duration: Date().timeIntervalSince(start))
-            throw NetworkError.transportError(error)
+            let urlError = error as? URLError
+            let finalError: NetworkError
+
+            if urlError?.code == .notConnectedToInternet {
+                finalError = .noConnection
+            } else {
+                finalError = .transportError(error)
+            }
+
+            logger.logResponse(nil, request, data: nil, error: finalError, duration: Date().timeIntervalSince(start))
+            throw finalError
         }
 
         logger.logResponse(response, request, data: data, error: nil, duration: Date().timeIntervalSince(start))
