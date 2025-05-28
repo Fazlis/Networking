@@ -19,4 +19,5 @@ public protocol Endpoint: Sendable {
     var headers: [String: String] { get }
     var queryItems: [URLQueryItem] { get }
     var body: Data? { get }
+    var cachePolicy: CachePolicy { get }
 }
