@@ -13,7 +13,7 @@
 import Foundation
 
 
-public enum CachePolicy {
+public enum CacheProtocol {
     case none
     case memory(ttl: TimeInterval?) // например, 3600 — 1 час
     case disk(ttl: TimeInterval?)   // nil — бесконечно
