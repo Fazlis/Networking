@@ -10,7 +10,7 @@ import Foundation
 
 
 public protocol Endpoint: Sendable {
-    associatedtype Response: Decodable & Sendable
+    associatedtype Response: Codable & Sendable
     var id: String { get }
     var request: URLRequest { get }
     var baseURL: String { get }
