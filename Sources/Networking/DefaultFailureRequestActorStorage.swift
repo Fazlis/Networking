@@ -9,48 +9,69 @@ import Foundation
 import NetworkProtocols
 
 
-public actor DefaultFailureRequestActorStorage: FailureRequestStorageProtocol {
+public actor DefaultFailureRequestActorStorage: ContinuableFailureRequestStorageProtocol {
     
-    public init() {}
+    private var isDebug: Bool
     
-    private var pendingRequests: [@Sendable () async throws -> Void] = []
-
-    public func pending() async -> [@Sendable () async throws -> Void] {
-            pendingRequests
-        }
-
-    public func add<E>(_ request: E, using client: any AsyncRequestExecuteProtocol) async where E: Endpoint {
-        let operation: @Sendable () async throws -> Void = {
-            _ = try await client.execute(request)
-        }
-        
-        safePrint("🧱 [FailureStorage] Добавлен запрос в очередь повторов: \(E.self)")
-        
-        pendingRequests.append(operation)
+    public init(isDebug: Bool = false) {
+        self.isDebug = isDebug
     }
+    
+    private struct DeferredRequest {
+        let operation: @Sendable () async throws -> Void
+        let continuation: CheckedContinuation<Void, Error>?
+    }
+    
+    private var pendingRequests: [DeferredRequest] = []
+    
+    public func pending() async -> [@Sendable () async throws -> Void] {
+        safePrint(isDebug: self.isDebug, "📋 Получение списка отложенных запросов, всего: \(pendingRequests.count)")
+        return pendingRequests.map { $0.operation }
+    }
+
+    public func add<E: Endpoint>(
+            _ request: E,
+            using client: AsyncRequestExecuteProtocol
+        ) async {
+            await add(request, using: client, continuation: nil)
+        }
+
+        // Новый метод — с continuation
+        public func add<E: Endpoint>(
+            _ request: E,
+            using client: AsyncRequestExecuteProtocol,
+            continuation: CheckedContinuation<E.Response, Error>? = nil
+        ) async {
+            safePrint(isDebug: self.isDebug, "➕ Добавляем новый отложенный запрос с id: \(request.id)")
+
+            let operation: @Sendable () async throws -> Void = {
+                await safePrint(isDebug: self.isDebug, "▶️ Выполняем отложенный запрос с id: \(request.id)")
+                do {
+                    let response = try await client.execute(request)
+                    await safePrint(isDebug: self.isDebug, "✅ Успешно выполнен отложенный запрос с id: \(request.id)")
+                    continuation?.resume(returning: response)
+                } catch {
+                    await safePrint(isDebug: self.isDebug, "❌ Ошибка при повторе запроса: \(error)")
+                    continuation?.resume(throwing: error)
+                }
+            }
+
+            pendingRequests.append(.init(operation: operation, continuation: nil))
+        }
 
     public func retryAll() async {
         let tasks = pendingRequests
         pendingRequests.removeAll()
-        
-        safePrint("🔁 [FailureStorage] Начинаем повтор \(tasks.count) запросов")
-        
-        for (index, task) in tasks.enumerated() {
+        safePrint(isDebug: self.isDebug, "🔄 Запускаем повтор выполнения \(tasks.count) отложенных запросов...")
+
+        for task in tasks {
             do {
-                safePrint("🚀 [FailureStorage] Повтор запроса \(index + 1)...")
-                
-                try await task()
-                
-                safePrint("✅ [FailureStorage] Запрос \(index + 1) успешно выполнен")
+                try await task.operation()
             } catch {
-                safePrint("❌ [FailureStorage] Ошибка при повторе запроса \(index + 1): \(error)")
+                safePrint(isDebug: self.isDebug, "❌ Ошибка при повторе запроса: \(error)")
             }
         }
-    }
-    
-    private func safePrint(_ message: String) {
-        #if DEBUG
-        print(message)
-        #endif
+
+        safePrint(isDebug: self.isDebug, "🎉 Все отложенные запросы обработаны")
     }
 }

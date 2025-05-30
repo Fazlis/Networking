@@ -8,12 +8,9 @@
 import Foundation
 
 
-public protocol ResponseCacheProtocol: Sendable {
-    var etagList: [String: String] { get }
-    var cahcedResponsList: [String: Data] { get }
-    func setETag(_ etag: String, forKey key: String)
-    func setCachedResponse(_ data: Data, forKey key: String)
-    func getETag(forKey key: String) -> String?
-    func getCachedResponse(forKey key: String) -> Data?
-    func removeAllData()
+public protocol ResponseCachePolicyProtocol: Sendable {
+    func cachedData(for key: String, cachePolicy: CacheProtocol) async -> Data?
+    func etag(for key: String) async -> String?
+    func store(response: HTTPURLResponse, data: Data, for key: String, policy: CacheProtocol) async
+    func clear(for key: String) async
 }
