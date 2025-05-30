@@ -13,15 +13,19 @@ public actor DefaultRequestSessionStorage: RequestSessionStorageProtocol {
     
     private var tasks: [String: URLSessionDataTask] = [:]
     
-    public init() {}
+    private var isDebug: Bool
+    
+    public init(isDebug: Bool = false) {
+        self.isDebug = isDebug
+    }
 
     /// Добавление задачи с учётом предыдущих
     public func add(task: URLSessionDataTask, for id: String) async {
         if let existingTask = tasks[id] {
-            print("♻️ Заменяем существующий task с id: \(id). Отмена старого.")
+            safePrint(isDebug: self.isDebug, "♻️ Заменяем существующий task с id: \(id). Отмена старого.")
             existingTask.cancel()
         } else {
-            print("🆕 Добавляем новый task с id: \(id)")
+            safePrint(isDebug: self.isDebug, "🆕 Добавляем новый task с id: \(id)")
         }
 
         tasks[id] = task
@@ -30,11 +34,11 @@ public actor DefaultRequestSessionStorage: RequestSessionStorageProtocol {
     /// Отмена задачи по id
     public func cancelTask(with id: String) async {
         guard let task = tasks[id] else {
-            print("⚠️ Нет задачи с id: \(id) для отмены")
+            safePrint(isDebug: self.isDebug, "⚠️ Нет задачи с id: \(id) для отмены")
             return
         }
 
-        print("❌ Отменён task с id: \(id)")
+        safePrint(isDebug: self.isDebug, "❌ Отменён task с id: \(id)")
         task.cancel()
         tasks[id] = nil
     }
@@ -42,19 +46,19 @@ public actor DefaultRequestSessionStorage: RequestSessionStorageProtocol {
     /// Удаление задачи после завершения или отмены
     public func removeTask(for id: String) async {
         if tasks.removeValue(forKey: id) != nil {
-            print("🧹 Удалён task с id: \(id) после выполнения")
+            safePrint(isDebug: self.isDebug, "🧹 Удалён task с id: \(id) после выполнения")
         } else {
-            print("⚠️ Попытка удалить несуществующий task с id: \(id)")
+            safePrint(isDebug: self.isDebug, "⚠️ Попытка удалить несуществующий task с id: \(id)")
         }
     }
 
     /// Отмена всех задач
     public func cancelAllTasks() async {
         tasks.forEach { key, task in
-            print("❌ Отменён task с id: \(key)")
+            safePrint(isDebug: self.isDebug, "❌ Отменён task с id: \(key)")
             task.cancel()
         }
         tasks.removeAll()
-        print("🧼 Все задачи отменены и очищены")
+        safePrint(isDebug: self.isDebug, "🧼 Все задачи отменены и очищены")
     }
 }
