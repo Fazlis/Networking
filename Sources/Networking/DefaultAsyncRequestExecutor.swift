@@ -76,13 +76,6 @@ public actor DefaultAsyncRequestExecutor: AsyncRequestExecuteProtocol {
         }
 
         guard 200..<300 ~= httpResponse.statusCode else {
-            logger.logResponse(
-                response,
-                request,
-                data: data,
-                error: NetworkError.httpError(httpResponse.statusCode, data),
-                duration: Date().timeIntervalSince(start)
-            )
             throw NetworkError.httpError(httpResponse.statusCode, data)
         }
         
