@@ -8,7 +8,7 @@
 import Foundation
 
 
-public protocol RetryPolicyProtocol: Sendable {
-    func shouldRetry(for error: NetworkError) async -> Bool
-    var maxRetries: Int { get }
+public protocol RetryDecisionProtocol: Sendable {
+    func shouldRetry(error: Error, attemptNumber: Int, configuration: RetryConfiguration) -> Bool
+    func delayForRetry(attemptNumber: Int, configuration: RetryConfiguration) -> TimeInterval
 }
