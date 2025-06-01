@@ -76,7 +76,7 @@ public struct DefaultRequestLogger: RequestLoggerProtocol {
             return
         }
         
-        var statusCodeIcon = httpResponse.statusCode == 200 ? "✅" : "❌"
+        var statusCodeIcon = (200...299).contains(httpResponse.statusCode) ? "✅" : "❌"
         
         var output = "\(statusCodeIcon)🔽"
         output += "\n💾 [RESPONSE] \(httpResponse.statusCode)"

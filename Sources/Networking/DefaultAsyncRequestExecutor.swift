@@ -45,7 +45,7 @@ public actor DefaultAsyncRequestExecutor: AsyncRequestExecuteProtocol {
            endpoint.cachePolicy != .none {
             request.setValue(etag, forHTTPHeaderField: "If-None-Match")
         }
-
+        
         let (data, response): (Data, URLResponse)
         
         do {
@@ -59,7 +59,7 @@ public actor DefaultAsyncRequestExecutor: AsyncRequestExecuteProtocol {
                 throw NetworkError.transportError(error)
             }
         }
-
+        
         guard let httpResponse = response as? HTTPURLResponse else {
             logger.logResponse(response, request, data: data, error: NetworkError.unknown, duration: Date().timeIntervalSince(start))
             throw NetworkError.unknown
@@ -74,8 +74,8 @@ public actor DefaultAsyncRequestExecutor: AsyncRequestExecuteProtocol {
                 throw NetworkError.noCache
             }
         }
-
-        guard 200..<300 ~= httpResponse.statusCode else {
+        
+        guard (200..<300).contains(httpResponse.statusCode) else {
             logger.logResponse(response, request, data: data, error: NetworkError.httpError(httpResponse.statusCode, data), duration: Date().timeIntervalSince(start))
             throw NetworkError.httpError(httpResponse.statusCode, data)
         }
