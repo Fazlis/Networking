@@ -60,8 +60,6 @@ public actor DefaultAsyncRequestExecutor: AsyncRequestExecuteProtocol {
             }
         }
 
-        logger.logResponse(response, request, data: data, error: nil, duration: Date().timeIntervalSince(start))
-
         guard let httpResponse = response as? HTTPURLResponse else {
             logger.logResponse(response, request, data: data, error: NetworkError.unknown, duration: Date().timeIntervalSince(start))
             throw NetworkError.unknown
@@ -69,13 +67,16 @@ public actor DefaultAsyncRequestExecutor: AsyncRequestExecuteProtocol {
         
         if httpResponse.statusCode == 304 {
             if let cached = await responseCacher.cachedData(for: endpoint.id, cachePolicy: endpoint.cachePolicy) {
+                logger.logResponse(response, request, data: data, error: nil, duration: Date().timeIntervalSince(start))
                 return try JSONDecoder().decode(E.Response.self, from: cached)
             } else {
+                logger.logResponse(response, request, data: data, error: NetworkError.noCache, duration: Date().timeIntervalSince(start))
                 throw NetworkError.noCache
             }
         }
 
         guard 200..<300 ~= httpResponse.statusCode else {
+            logger.logResponse(response, request, data: data, error: NetworkError.httpError(httpResponse.statusCode, data), duration: Date().timeIntervalSince(start))
             throw NetworkError.httpError(httpResponse.statusCode, data)
         }
         
@@ -95,7 +96,9 @@ public actor DefaultAsyncRequestExecutor: AsyncRequestExecuteProtocol {
         }
 
         do {
-            return try JSONDecoder().decode(E.Response.self, from: data)
+            let decodedResponse = try JSONDecoder().decode(E.Response.self, from: data)
+            logger.logResponse(response, request, data: data, error: nil, duration: Date().timeIntervalSince(start))
+            return decodedResponse
         } catch {
             logger.logResponse(
                 response,
