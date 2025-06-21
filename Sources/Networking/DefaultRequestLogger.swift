@@ -56,6 +56,11 @@ public struct DefaultRequestLogger: RequestLoggerProtocol {
             output += "\n⏱️ REQUEST DURATION: \(formattedDuration)"
             output += "\n🌐 URL: \(request?.url?.absoluteString ?? "")"
             
+            if let data = data,
+               let bodyString = prettyPrintJSON(data) {
+                output += "\n📥 RESPONSE BODY:\n\(bodyString)"
+            }
+            
             if let httpResponse = response as? HTTPURLResponse {
                 output += "\n📶 STATUS CODE: \(httpResponse.statusCode)"
             }
@@ -70,6 +75,12 @@ public struct DefaultRequestLogger: RequestLoggerProtocol {
             output += "\n💾 [RESPONSE]"
             output += "\n⏱️ REQUEST DURATION: \(formattedDuration)"
             output += "\n🌐 URL: \(request?.url?.absoluteString ?? "")"
+            
+            if let data = data,
+               let bodyString = prettyPrintJSON(data) {
+                output += "\n📥 RESPONSE BODY:\n\(bodyString)"
+            }
+            
             output += "\n⛔️ ERROR: Can't cast response to HTTPURLResponse"
             output += "\n❌🔼"
             print(output)
