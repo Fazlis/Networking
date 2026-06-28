@@ -2,22 +2,26 @@
 //  Endpoint.swift
 //  Networking
 //
-//  Created by Fazliddinov Iskandar on 26/05/25.
+//  Created by Fazliddinov Iskandar on 28/06/26.
 //
-
 
 import Foundation
 
 
-public protocol Endpoint: Sendable {
-    associatedtype Response: Codable & Sendable
+public protocol Endpoint {
+    associatedtype CachePolicy: CacheProtocol
+    
     var id: String { get }
-    var request: URLRequest { get }
-    var baseURL: String { get }
+    var baseURL: URL { get }
     var path: String { get }
     var method: HTTPMethod { get }
-    var headers: [String: String] { get }
-    var queryItems: [URLQueryItem] { get }
-    var body: Data? { get }
-    var cachePolicy: CacheProtocol { get }
+    var cachePolicy: CachePolicy { get }
+    var timeoutInterval: TimeInterval { get }
+    var requestModifiers: [RequestModifier] { get }
+}
+
+public extension Endpoint {
+    var id: String { baseURL.absoluteString + path }
+    var timeoutInterval: TimeInterval { 30 }
+    var requestModifiers: [RequestModifier] { [] }
 }
