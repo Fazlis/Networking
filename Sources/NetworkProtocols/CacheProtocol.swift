@@ -1,29 +1,26 @@
-////
-//  CacheProtocol.swift
-//  Core
 //
-//  Created by Fazliddinov Iskandar on 28/05/25.
-//  
-//  Email: exclusive.fazliddinov@gmail.com
-//  GitHub: https://github.com/Fazlis
-//  LinkedIn: https://www.linkedin.com/in/iskandar-fazliddinov-2b8438279
-//  Phone: (+992) 92-100-44-55
+//  CacheProtocol.swift
+//  Networking
+//
+//  Created by Fazliddinov Iskandar on 28/06/26.
 //
 
 import Foundation
 
 
-public enum CacheProtocol: Equatable, Sendable {
-    case none
-    case memory(ttl: TimeInterval?)
-    case disk(ttl: TimeInterval?)
-
-    public static func == (lhs: CacheProtocol, rhs: CacheProtocol) -> Bool {
-        switch (lhs, rhs) {
-        case (.none, .none): return true
-        case (.memory, .memory): return true
-        case (.disk, .disk): return true
-        default: return false
-        }
-    }
+public protocol CacheProtocol: Sendable {
+    associatedtype CacheLevel: MemoryCacheProtocol
+    
+    var useCache: Bool { get }
+    var cacheLevel: CacheLevel { get }
 }
+
+public protocol MemoryCacheProtocol: Sendable {
+    associatedtype Level: CacheLevel
+    
+    var timeToLive: TimeInterval? { get }
+    
+    var level: Level { get }
+}
+
+public protocol CacheLevel: Sendable {}
